@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name if item else 'Новий майстер' }}{% endblock %}
+{% block content %}
+<h1>{{ item.name if item else 'Новий майстер' }}</h1>
+
+{% if item and conflicts %}
+<div class="card warn">
+  <h2>⚠️ Записи поза графіком</h2>
+  <p>Після зміни графіка ці записи опинились поза зміною майстра. Їх <b>не скасовано автоматично</b> — зв'яжіться з клієнтами або скасуйте вручну.</p>
+  <ul>{% for b in conflicts %}<li>{{ fmt.d_short(b.starts_at) }} {{ fmt.hm(b.starts_at) }}–{{ fmt.hm(b.ends_at) }} · {{ b.service.short_name }} · {{ b.client.name }}, <a href="tel:{{ b.client.phone }}">{{ fmt.pretty_phone(b.client.phone) }}</a></li>{% endfor %}</ul>
+  <a href="/bookings?date_from={{ fmt.local(conflicts[0].starts_at).date().isoformat() }}&master_id={{ item.id }}">Відкрити записи</a>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Дані</h2>
+  <form method="post" action="{{ '/masters/%d' % item.id if item else '/masters/new' }}">
+    <div class="row">
+      <div><label>Імʼя</label><input name="name" value="{{ item.name if item else '' }}" required maxlength="60"></div>
+      <div><label>Telegram (@username)</label><input name="tg_username" value="{{ '@' ~ item.tg_username if item and item.tg_username else '' }}" placeholder="@username"></div>
+      <div class="narrow"><label>Порядок</label><input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></div>
+    </div>
+    {% if item and item.tg_username %}
+      <p class="muted">{% if item.tg_user_id %}✅ Telegram підключено — майстер отримує сповіщення.{% else %}⏳ Попросіть майстра відкрити бота і натиснути /start — після цього він почне отримувати сповіщення.{% endif %}</p>
+    {% endif %}
+    <p><label>Примітка</label><input name="note" value="{{ item.note if item else '' }}"></p>
+    <p><label>Послуги, які виконує</label></p>
+    <p class="checks">
+      {% for s in services %}
+      <label><input type="checkbox" name="services" value="{{ s.id }}" {{ 'checked' if item and s in item.services }}> {{ s.short_name }}{% if not s.is_active %} <span class="muted">(вимкнена)</span>{% endif %}</label>
+      {% endfor %}
+    </p>
+    <p class="checks"><label><input type="checkbox" name="is_active" {{ 'checked' if not item or item.is_active }}> Приймає записи</label></p>
+    <button type="submit">Зберегти</button>
+  </form>
+</div>
+
+{% if item %}
+<div class="card">
+  <h2>Тижневий графік</h2>
+  <form method="post" action="/masters/{{ item.id }}/weekly">
+    <div class="table-wrap"><table>
+      <tr><th>День</th><th>Працює</th><th>З</th><th>До</th></tr>
+      {% for wd in range(7) %}{% set w = weekly.get(wd) %}
+      <tr>
+        <td><b>{{ fmt.WD_SHORT[wd] }}</b></td>
+        <td><input type="checkbox" name="work_{{ wd }}" {{ 'checked' if w }}></td>
+        <td><input type="time" name="start_{{ wd }}" step="1800" value="{{ w.start_time.strftime('%H:%M') if w else '10:00' }}"></td>
+        <td><input type="time" name="end_{{ wd }}" step="1800" value="{{ w.end_time.strftime('%H:%M') if w else '20:00' }}"></td>
+      </tr>
+      {% endfor %}
+    </table></div>
+    <p><button type="submit">Зберегти графік</button></p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Окремі дні (інші години або вихідний)</h2>
+  {% if overrides %}
+  <div class="table-wrap"><table>
+    {% for o in overrides %}
+    <tr>
+      <td>{{ fmt.d_short(o.day) }}</td>
+      <td>{% if o.start_time %}{{ o.start_time.strftime('%H:%M') }}–{{ o.end_time.strftime('%H:%M') }}{% else %}<span class="pill off">вихідний</span>{% endif %}</td>
+      <td class="muted">{{ o.note }}</td>
+      <td><form method="post" action="/overrides/{{ o.id }}/delete" class="inline"><button class="small danger" type="submit">Видалити</button></form></td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">Немає.</p>{% endif %}
+  <form method="post" action="/masters/{{ item.id }}/overrides" style="margin-top:12px">
+    <div class="row">
+      <div><label>Дата</label><input type="date" name="day" min="{{ today.isoformat() }}" required></div>
+      <div class="narrow"><label>Тип</label><select name="kind"><option value="hours">Інші години</option><option value="off">Вихідний</option></select></div>
+      <div class="narrow"><label>З</label><input type="time" name="start" step="1800" value="10:00"></div>
+      <div class="narrow"><label>До</label><input type="time" name="end" step="1800" value="16:00"></div>
+      <div><label>Примітка</label><input name="note" placeholder="скорочений день"></div>
+      <div class="narrow"><button type="submit">Додати</button></div>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Відпустки</h2>
+  {% if vacations %}
+  <div class="table-wrap"><table>
+    {% for v in vacations %}
+    <tr>
+      <td>{{ v.date_from.strftime('%d.%m.%Y') }} – {{ v.date_to.strftime('%d.%m.%Y') }}</td>
+      <td class="muted">{{ v.note }}</td>
+      <td><form method="post" action="/vacations/{{ v.id }}/delete" class="inline"><button class="small danger" type="submit">Видалити</button></form></td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">Немає.</p>{% endif %}
+  <form method="post" action="/masters/{{ item.id }}/vacations" style="margin-top:12px">
+    <div class="row">
+      <div><label>З</label><input type="date" name="date_from" required></div>
+      <div><label>По (включно)</label><input type="date" name="date_to" required></div>
+      <div><label>Примітка</label><input name="note"></div>
+      <div class="narrow"><button type="submit">Додати</button></div>
+    </div>
+  </form>
+</div>
+
+<p><a href="/blocks/new?master_id={{ item.id }}">⛔ Заблокувати час на конкретний день (обід тощо) →</a></p>
+{% endif %}
+{% endblock %}

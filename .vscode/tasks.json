@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "options": {
+    "env": {
+      "DATABASE_URL": "postgresql+asyncpg://barber:barber@localhost:5432/barber"
+    }
+  },
+  "tasks": [
+    {
+      "label": "Dev DB: запустити",
+      "detail": "PostgreSQL у Docker (docker-compose.dev.yml) на localhost:5432",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.dev.yml up -d --wait",
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    },
+    {
+      "label": "Dev DB: міграції",
+      "detail": "alembic upgrade head (перед цим піднімає БД)",
+      "type": "shell",
+      "command": "uv run alembic upgrade head",
+      "dependsOn": "Dev DB: запустити",
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    },
+    {
+      "label": "Dev DB: тестові дані (seed --demo)",
+      "detail": "Послуги, майстри, графік з data/shop_data.xlsx + демо-записи на найближчий вільний час",
+      "type": "shell",
+      "command": "uv run python -m app.scripts.seed --demo",
+      "dependsOn": "Dev DB: міграції",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev DB: зупинити",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.dev.yml stop",
+      "problemMatcher": []
+    },
+    {
+      "label": "Тести",
+      "detail": "uv run pytest -q (потрібен Docker)",
+      "type": "shell",
+      "command": "uv run pytest -q",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ruff: перевірка й форматування",
+      "type": "shell",
+      "command": "uv run ruff check . && uv run ruff format .",
+      "problemMatcher": []
+    }
+  ]
+}

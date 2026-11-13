@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Новий запис{% endblock %}
+{% block content %}
+<h1>Новий запис (для клієнта, що подзвонив)</h1>
+<div class="card">
+  <form method="get" action="/bookings/new" class="row">
+    <div><label>Послуга</label>
+      <select name="service_id" onchange="this.form.submit()" required>
+        <option value="">— оберіть —</option>
+        {% for s in services %}<option value="{{ s.id }}" {{ 'selected' if service and service.id == s.id }}>{{ s.short_name }} · {{ s.duration_min }} хв · {{ s.price }} грн</option>{% endfor %}
+      </select></div>
+    <div><label>Майстер</label>
+      <select name="master_id">
+        <option value="0">Будь-хто з майстрів</option>
+        {% for m in masters %}<option value="{{ m.id }}" {{ 'selected' if master_id == m.id }}>{{ m.name }}</option>{% endfor %}
+      </select></div>
+    <div><label>Дата</label><input type="date" name="day" min="{{ today.isoformat() }}" value="{{ day.isoformat() if day else today.isoformat() }}" required></div>
+    <div class="narrow"><button type="submit">Вільний час</button></div>
+  </form>
+</div>
+
+{% if service and day %}
+<div class="card">
+  {% if not slots %}
+    <p class="muted">На {{ fmt.d_short(day) }} вільного часу для цієї послуги немає (вихідний, відпустка або все зайнято).</p>
+  {% else %}
+  <form method="post" action="/bookings/new">
+    <input type="hidden" name="service_id" value="{{ service.id }}">
+    <input type="hidden" name="master_id" value="{{ master_id }}">
+    <input type="hidden" name="day" value="{{ day.isoformat() }}">
+    <h2>{{ fmt.d_title(day) }} — вільний час</h2>
+    <div class="slots">
+      {% for t, mids in slots.items() %}
+        <label><input type="radio" name="time" value="{{ fmt.hm(t) }}" required><span>{{ fmt.hm(t) }}</span>
+        {% if not master_id %}<span class="muted" style="font-size:12px">({{ masters | selectattr('id', 'in', mids) | map(attribute='name') | join(', ') }})</span>{% endif %}
+        </label>
+      {% endfor %}
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div><label>Імʼя клієнта</label><input name="name" value="{{ form.get('name', '') }}" required maxlength="100"></div>
+      <div><label>Телефон</label><input name="phone" type="tel" value="{{ form.get('phone', '') }}" placeholder="+380 93 000 11 22" required></div>
+    </div>
+    <p><label>Коментар (необовʼязково)</label><input name="note" value="{{ form.get('note', '') }}"></p>
+    <button type="submit">Записати</button>
+    <span class="muted">Майстер отримає сповіщення в Telegram.</span>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

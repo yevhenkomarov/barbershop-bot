@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Перерва{% endblock %}
+{% block content %}
+<h1>Заблокувати час (обід, особисті справи)</h1>
+<div class="card">
+  <p class="muted">Заблокований час не показується клієнтам у боті. Якщо на цей час уже є запис — система не дасть створити перерву.</p>
+  <form method="post" action="/blocks/new">
+    <div class="row">
+      <div><label>Майстер</label>
+        <select name="master_id" required>{% for m in masters %}<option value="{{ m.id }}" {{ 'selected' if master_id == m.id }}>{{ m.name }}</option>{% endfor %}</select></div>
+      <div><label>Дата</label><input type="date" name="day" value="{{ day.isoformat() }}" required></div>
+      <div class="narrow"><label>З</label><input type="time" name="start" step="900" value="13:00" required></div>
+      <div class="narrow"><label>До</label><input type="time" name="end" step="900" value="14:00" required></div>
+    </div>
+    <p><label>Примітка</label><input name="note" placeholder="обід"></p>
+    <button type="submit">Заблокувати</button>
+  </form>
+</div>
+{% endblock %}

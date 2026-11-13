@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Послуга{% endblock %}
+{% block content %}
+<h1>{{ item.name if item else 'Нова послуга' }}</h1>
+<div class="card">
+  <form method="post" action="{{ '/services/%d' % item.id if item else '/services/new' }}">
+    <div class="row">
+      <div><label>Повна назва</label><input name="name" value="{{ item.name if item else '' }}" required maxlength="100"></div>
+      <div><label>Коротко (на кнопці в боті)</label><input name="short_name" value="{{ item.short_name if item else '' }}" maxlength="40"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="narrow"><label>Тривалість, хв</label><input type="number" name="duration_min" min="5" max="480" step="5" value="{{ item.duration_min if item else 30 }}" required></div>
+      <div class="narrow"><label>Ціна, грн</label><input type="number" name="price" min="0" value="{{ item.price if item else '' }}" required></div>
+      <div class="narrow"><label>Порядок</label><input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></div>
+    </div>
+    <p><label>Опис</label><textarea name="description" rows="2">{{ item.description if item else '' }}</textarea></p>
+    <p class="checks"><label><input type="checkbox" name="is_active" {{ 'checked' if not item or item.is_active }}> Показувати в боті</label></p>
+    <button type="submit">Зберегти</button> <a href="/services" class="muted" style="margin-left:12px">Скасувати</a>
+  </form>
+  <p class="muted" style="margin-top:16px">Не забудьте позначити цю послугу в картках майстрів, які її виконують.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Майстри{% endblock %}
+{% block content %}
+<h1>Майстри <a class="btn ghost" href="/masters/new" style="font-size:14px;margin-left:8px">+ Додати</a></h1>
+<div class="card table-wrap"><table>
+  <tr><th>Імʼя</th><th>Telegram</th><th>Послуги</th><th>Статус</th><th></th></tr>
+  {% for m in items %}
+  <tr>
+    <td>{{ m.name }}{% if m.note %}<br><span class="muted">{{ m.note }}</span>{% endif %}</td>
+    <td>{% if m.tg_username %}@{{ m.tg_username }}
+          {% if m.tg_user_id %}<span class="pill ok">підключено</span>{% else %}<span class="pill">ще не писав боту</span>{% endif %}
+        {% else %}<span class="muted">—</span>{% endif %}</td>
+    <td>{{ m.services | map(attribute='short_name') | join(', ') or '—' }}</td>
+    <td>{% if m.is_active %}<span class="pill ok">працює</span>{% else %}<span class="pill off">вимкнений</span>{% endif %}</td>
+    <td><a href="/masters/{{ m.id }}">Графік і дані</a></td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% endblock %}

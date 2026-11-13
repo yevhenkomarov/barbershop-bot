@@ -1,0 +1,58 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Бот + нагадування",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.bot",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "DATABASE_URL": "postgresql+asyncpg://barber:barber@localhost:5432/barber"
+      },
+      "preLaunchTask": "Dev DB: міграції",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Адмінка (localhost:8001)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.admin.main:app", "--reload", "--reload-dir", "app", "--port", "8001"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "DATABASE_URL": "postgresql+asyncpg://barber:barber@localhost:5432/barber",
+        "ADMIN_HTTPS_ONLY": "false"
+      },
+      "preLaunchTask": "Dev DB: міграції",
+      "console": "integratedTerminal",
+      "jinja": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Заповнити БД (seed --demo)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.scripts.seed",
+      "args": ["--demo"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "DATABASE_URL": "postgresql+asyncpg://barber:barber@localhost:5432/barber"
+      },
+      "preLaunchTask": "Dev DB: міграції",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Бот + адмінка",
+      "configurations": ["Бот + нагадування", "Адмінка (localhost:8001)"],
+      "preLaunchTask": "Dev DB: міграції",
+      "stopAll": true
+    }
+  ]
+}

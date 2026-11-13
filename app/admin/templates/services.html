@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Послуги{% endblock %}
+{% block content %}
+<h1>Послуги <a class="btn ghost" href="/services/new" style="font-size:14px;margin-left:8px">+ Додати</a></h1>
+<div class="card table-wrap"><table>
+  <tr><th>Назва</th><th>На кнопці</th><th>Тривалість</th><th>Ціна</th><th>У боті</th><th></th></tr>
+  {% for s in items %}
+  <tr>
+    <td>{{ s.name }}{% if s.description %}<br><span class="muted">{{ s.description }}</span>{% endif %}</td>
+    <td>{{ s.short_name }}</td><td>{{ s.duration_min }} хв</td><td>{{ s.price }} грн</td>
+    <td>{% if s.is_active %}<span class="pill ok">показується</span>{% else %}<span class="pill off">вимкнена</span>{% endif %}</td>
+    <td><a href="/services/{{ s.id }}">Змінити</a></td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% endblock %}

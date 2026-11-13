@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Адмінка{% endblock %} · {{ settings().shop_name }}</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d1d1f; --muted:#6b6b70; --line:#e3e1dc; --accent:#9a3412; --ok:#166534; --okbg:#ecfdf3; --err:#b91c1c; --errbg:#fef2f2; --warnbg:#fffbeb; --warn:#92400e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:#1d1d1f; color:#fff; }
+  header .wrap { display:flex; flex-wrap:wrap; gap:4px 16px; align-items:center; padding:10px 16px; }
+  header a { color:#e7e5e4; text-decoration:none; padding:6px 2px; }
+  header a.on { color:#fff; border-bottom:2px solid #f97316; }
+  header .brand { font-weight:700; color:#fff; margin-right:8px; }
+  header form { margin-left:auto; }
+  .wrap { max-width:1100px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  h2 { font-size:17px; margin:0 0 12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .flash { padding:10px 14px; border-radius:8px; margin-bottom:12px; }
+  .flash.ok { background:var(--okbg); color:var(--ok); }
+  .flash.err { background:var(--errbg); color:var(--err); }
+  .warn { background:var(--warnbg); color:var(--warn); border:1px solid #fde68a; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:13px; color:var(--muted); font-weight:600; white-space:nowrap; }
+  tr.cancelled td { color:var(--muted); text-decoration:line-through; }
+  tr.cancelled td.actions { text-decoration:none; }
+  tr.block td { background:#fafaf9; color:var(--muted); }
+  label { display:block; font-size:13px; color:var(--muted); margin-bottom:4px; }
+  input, select, textarea { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; width:100%; }
+  input[type=checkbox], input[type=radio] { width:auto; }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+  .row > div { flex:1 1 160px; }
+  .row > div.narrow { flex:0 1 120px; }
+  button, .btn { font:inherit; display:inline-block; padding:8px 14px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .btn.ghost, button.ghost { background:#fff; color:var(--accent); }
+  button.small { padding:4px 10px; font-size:13px; }
+  button.danger { background:#fff; color:var(--err); border-color:#fca5a5; }
+  .muted { color:var(--muted); }
+  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; background:#f5f5f4; border:1px solid var(--line); }
+  .pill.ok { background:var(--okbg); color:var(--ok); border-color:#bbf7d0; }
+  .pill.off { background:var(--errbg); color:var(--err); border-color:#fecaca; }
+  .slots { display:flex; flex-wrap:wrap; gap:8px; }
+  .slots label { display:inline-flex; gap:6px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:6px 10px; color:var(--ink); font-size:15px; cursor:pointer; }
+  .slots input:checked + span { font-weight:700; color:var(--accent); }
+  .quick a { margin-right:12px; }
+  .inline { display:inline; }
+  .checks label { display:inline-flex; gap:6px; align-items:center; margin-right:16px; color:var(--ink); font-size:15px; }
+  td input[type=time] { width:7.2em; padding:6px 6px; }
+  @media (max-width:600px) { .wrap { padding:12px; } h1 { font-size:19px; } th, td { padding:6px 6px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="brand">✂️ {{ settings().shop_name }}</span>
+    {% if path is defined %}
+    <a href="/bookings" class="{{ 'on' if path == '/bookings' }}">Записи</a>
+    <a href="/bookings/new" class="{{ 'on' if path == '/bookings/new' }}">+ Запис</a>
+    <a href="/blocks/new" class="{{ 'on' if path == '/blocks/new' }}">Перерва</a>
+    <a href="/masters" class="{{ 'on' if path.startswith('/masters') }}">Майстри й графік</a>
+    <a href="/services" class="{{ 'on' if path.startswith('/services') }}">Послуги</a>
+    <form method="post" action="/logout"><button class="small ghost" type="submit">Вийти</button></form>
+    {% endif %}
+  </div>
+</header>
+<main class="wrap">
+  {% for level, text in flashes or [] %}<div class="flash {{ level }}">{{ text }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Записи{% endblock %}
+{% block content %}
+<h1>Записи</h1>
+<div class="card">
+  <form method="get" action="/bookings" class="row">
+    <div><label>З дати</label><input type="date" name="date_from" value="{{ f.date_from.isoformat() }}"></div>
+    <div><label>По дату</label><input type="date" name="date_to" value="{{ f.date_to.isoformat() }}"></div>
+    <div><label>Майстер</label>
+      <select name="master_id"><option value="">Усі</option>
+        {% for m in masters %}<option value="{{ m.id }}" {{ 'selected' if f.master_id == m.id }}>{{ m.name }}</option>{% endfor %}
+      </select></div>
+    <div class="narrow"><label>Статус</label>
+      <select name="status">
+        <option value="active" {{ 'selected' if f.status == 'active' }}>Активні</option>
+        <option value="cancelled" {{ 'selected' if f.status == 'cancelled' }}>Скасовані</option>
+        <option value="all" {{ 'selected' if f.status == 'all' }}>Усі</option>
+      </select></div>
+    <div class="narrow"><button type="submit">Показати</button></div>
+  </form>
+  {% set mq = '&master_id=' ~ f.master_id if f.master_id else '' %}
+  <p class="quick" style="margin:12px 0 0">
+    <a href="/bookings?date_from={{ today.isoformat() }}{{ mq }}">Сьогодні</a>
+    <a href="/bookings?date_from={{ (today + timedelta(days=1)).isoformat() }}{{ mq }}">Завтра</a>
+    <a href="/bookings?date_from={{ today.isoformat() }}&date_to={{ (today + timedelta(days=6)).isoformat() }}{{ mq }}">7 днів</a>
+    <a href="/bookings?date_from={{ today.isoformat() }}&date_to={{ (today + timedelta(days=13)).isoformat() }}{{ mq }}">14 днів</a>
+  </p>
+</div>
+
+<div class="card">
+  {% if not items %}
+    <p class="muted">Записів немає.</p>
+  {% else %}
+  <div class="table-wrap"><table>
+    <tr><th>Дата</th><th>Час</th><th>Майстер</th><th>Послуга</th><th>Клієнт</th><th>Телефон</th><th>Ціна</th><th></th><th></th></tr>
+    {% for b in items %}
+    <tr class="{{ 'cancelled' if b.status == 'cancelled' }} {{ 'block' if b.kind == 'block' }}">
+      <td>{{ fmt.d_short(b.starts_at) }}</td>
+      <td>{{ fmt.hm(b.starts_at) }}–{{ fmt.hm(b.ends_at) }}</td>
+      <td>{{ b.master.name }}</td>
+      {% if b.kind == 'block' %}
+        <td colspan="4">⛔ Перерва{% if b.note %} — {{ b.note }}{% endif %}</td>
+      {% else %}
+        <td>{{ b.service.short_name }}{% if b.note %}<br><span class="muted">{{ b.note }}</span>{% endif %}</td>
+        <td>{{ b.client.name }}{% if b.source == 'admin' %} <span class="pill">вручну</span>{% endif %}</td>
+        <td><a href="tel:{{ b.client.phone }}">{{ fmt.pretty_phone(b.client.phone) }}</a></td>
+        <td>{{ b.price }}</td>
+      {% endif %}
+      <td>
+        {% if b.status == 'cancelled' %}<span class="pill off">скасовано{{ ' клієнтом' if b.cancelled_by == 'client' }}</span>
+        {% elif b.confirmed_at %}<span class="pill ok">✅ підтвердив</span>{% endif %}
+      </td>
+      <td class="actions">
+        {% if b.status == 'active' %}
+        <form method="post" action="/bookings/{{ b.id }}/cancel" class="inline"
+              onsubmit="return confirm('{{ 'Видалити перерву?' if b.kind == 'block' else 'Скасувати запис? Клієнт і майстер отримають сповіщення.' }}')">
+          <input type="hidden" name="back" value="{{ back }}">
+          <button class="small danger" type="submit">{{ 'Видалити' if b.kind == 'block' else 'Скасувати' }}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  <p class="muted" style="margin:12px 0 0">Активних записів: {{ items | selectattr('status', 'equalto', 'active') | selectattr('kind', 'equalto', 'booking') | list | length }} · сума {{ total }} грн</p>
+  {% endif %}
+</div>
+{% endblock %}
